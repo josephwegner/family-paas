@@ -9,9 +9,9 @@ terraform/
   modules/          Reusable Terraform modules (Lambda, API Gateway, CloudFront, DynamoDB)
   shared/           Shared infrastructure (Lambda deployment bucket, shared DynamoDB, shared media bucket)
 packages/
-  lambda-response/  @family-paas/lambda-response - Lambda response helpers
-  lambda-simulator/ @family-paas/lambda-simulator - Express-based Lambda simulator for local dev
-  deploy/           @family-paas/deploy - CLI deploy tool that reads app.config.json
+  lambda-response/  family-paas/lambda-response - Lambda response helpers
+  lambda-simulator/ family-paas/lambda-simulator - Express-based Lambda simulator for local dev
+  deploy/           family-paas/deploy - Deploy CLI that reads app.config.json
 templates/
   new-app/          Starter template for scaffolding a new app
 scripts/
@@ -106,43 +106,45 @@ module "my_table" {
 
 ## npm packages
 
-Install from git (no registry needed):
+One dependency, installed from git (no registry needed):
 
 ```json
 {
-  "@family-paas/lambda-response": "github:josephwegner/family-paas#main",
-  "@family-paas/lambda-simulator": "github:josephwegner/family-paas#main",
-  "@family-paas/deploy": "github:josephwegner/family-paas#main"
+  "family-paas": "github:josephwegner/family-paas#main"
 }
 ```
 
-### @family-paas/lambda-response
+Packages are exposed via subpath exports. Since apps use `esbuild` (for lambda bundling) and `tsx` (for local dev), the TypeScript source is consumed directly with no build step.
+
+### family-paas/lambda-response
 
 ```ts
-import { createSuccessResponse, createErrorResponse } from '@family-paas/lambda-response';
+import { createSuccessResponse, createErrorResponse } from 'family-paas/lambda-response';
 
 return createSuccessResponse({ data: 'hello' });       // 200
 return createSuccessResponse({ data: 'created' }, 201); // custom status
 return createErrorResponse(404, 'Not found');
 ```
 
-### @family-paas/lambda-simulator
+### family-paas/lambda-simulator
 
 Used in `local-dev/server.ts` to simulate Lambda + API Gateway locally:
 
 ```ts
-import { simulateLambda } from '@family-paas/lambda-simulator';
+import { simulateLambda } from 'family-paas/lambda-simulator';
 app.get('/api/hello', (req, res) => simulateLambda(handler, req, res));
 ```
 
-### @family-paas/deploy
+### family-paas/deploy
 
-CLI tool that reads `app.config.json` and handles the full deploy pipeline:
+Deploy CLI that reads `app.config.json`. Run via tsx in npm scripts:
 
-```bash
-npm run deploy              # lambdas + frontend
-npm run deploy:lambdas      # lambdas only
-npm run deploy:frontend     # frontend only
+```json
+{
+  "deploy": "tsx node_modules/family-paas/packages/deploy/src/index.ts",
+  "deploy:lambdas": "tsx node_modules/family-paas/packages/deploy/src/index.ts --lambdas-only",
+  "deploy:frontend": "tsx node_modules/family-paas/packages/deploy/src/index.ts --frontend-only"
+}
 ```
 
 ## Creating a new app
