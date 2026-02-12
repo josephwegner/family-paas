@@ -1,0 +1,11 @@
+{
+  "name": "family-paas",
+  "version": "1.0.0",
+  "description": "Shared platform for family web apps",
+  "type": "module",
+  "exports": {
+    "./lambda-response": "./packages/lambda-response/src/index.ts",
+    "./lambda-simulator": "./packages/lambda-simulator/src/index.ts",
+    "./deploy": "./packages/deploy/src/index.ts"
+  }
+}

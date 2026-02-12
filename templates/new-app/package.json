@@ -8,14 +8,12 @@
     "dev:frontend": "echo 'Add your frontend dev command here'",
     "dev:api": "tsx local-dev/server.ts",
     "build:frontend": "echo 'Add your frontend build command here'",
-    "deploy": "family-paas-deploy",
-    "deploy:lambdas": "family-paas-deploy --lambdas-only",
-    "deploy:frontend": "family-paas-deploy --frontend-only"
+    "deploy": "tsx node_modules/family-paas/packages/deploy/src/index.ts",
+    "deploy:lambdas": "tsx node_modules/family-paas/packages/deploy/src/index.ts --lambdas-only",
+    "deploy:frontend": "tsx node_modules/family-paas/packages/deploy/src/index.ts --frontend-only"
   },
   "dependencies": {
-    "@family-paas/deploy": "github:josephwegner/family-paas#main",
-    "@family-paas/lambda-response": "github:josephwegner/family-paas#main",
-    "@family-paas/lambda-simulator": "github:josephwegner/family-paas#main",
+    "family-paas": "github:josephwegner/family-paas#main",
     "cors": "^2.8.5",
     "dotenv": "^17.0.0",
     "express": "^5.1.0"

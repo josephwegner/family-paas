@@ -1,5 +1,5 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
-import { createSuccessResponse, createErrorResponse } from '@family-paas/lambda-response';
+import { createSuccessResponse, createErrorResponse } from 'family-paas/lambda-response';
 
 export const handler = async (
   event: APIGatewayProxyEvent,

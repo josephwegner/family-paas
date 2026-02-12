@@ -3,7 +3,7 @@ dotenv.config();
 
 import express from 'express';
 import cors from 'cors';
-import { simulateLambda } from '@family-paas/lambda-simulator';
+import { simulateLambda } from 'family-paas/lambda-simulator';
 
 import { handler as exampleHandler } from '../lambdas/example/index.js';
 
