@@ -1,0 +1,19 @@
+{
+  "name": "@family-paas/lambda-response",
+  "version": "1.0.0",
+  "description": "Shared Lambda response helpers for family-paas apps",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc"
+  },
+  "peerDependencies": {
+    "@types/aws-lambda": "^8.10.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.159",
+    "typescript": "~5.9.0"
+  }
+}

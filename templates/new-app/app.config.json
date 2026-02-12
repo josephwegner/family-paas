@@ -1,0 +1,14 @@
+{
+  "name": "APP_NAME",
+  "environment": "prod",
+  "region": "us-east-1",
+  "lambdas": ["example"],
+  "frontend": {
+    "buildCommand": "npm run build:frontend",
+    "distDir": "dist"
+  },
+  "esbuild": {
+    "target": "node20",
+    "external": ["aws-sdk", "aws-lambda"]
+  }
+}

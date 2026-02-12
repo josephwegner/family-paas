@@ -1,0 +1,33 @@
+{
+  "name": "APP_NAME",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:api\"",
+    "dev:frontend": "echo 'Add your frontend dev command here'",
+    "dev:api": "tsx local-dev/server.ts",
+    "build:frontend": "echo 'Add your frontend build command here'",
+    "deploy": "family-paas-deploy",
+    "deploy:lambdas": "family-paas-deploy --lambdas-only",
+    "deploy:frontend": "family-paas-deploy --frontend-only"
+  },
+  "dependencies": {
+    "@family-paas/deploy": "github:josephwegner/family-paas#main",
+    "@family-paas/lambda-response": "github:josephwegner/family-paas#main",
+    "@family-paas/lambda-simulator": "github:josephwegner/family-paas#main",
+    "cors": "^2.8.5",
+    "dotenv": "^17.0.0",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.159",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^24.0.0",
+    "concurrently": "^9.0.0",
+    "esbuild": "^0.27.0",
+    "tsx": "^4.20.0",
+    "typescript": "~5.9.0"
+  }
+}
