@@ -32,3 +32,18 @@ output "account_id" {
   description = "AWS Account ID"
   value       = local.account_id
 }
+
+output "cognito_user_pool_id" {
+  description = "Cognito User Pool ID"
+  value       = aws_cognito_user_pool.family.id
+}
+
+output "cognito_user_pool_arn" {
+  description = "Cognito User Pool ARN"
+  value       = aws_cognito_user_pool.family.arn
+}
+
+output "cognito_user_pool_issuer" {
+  description = "Cognito User Pool issuer URL for JWT validation"
+  value       = "https://cognito-idp.us-east-1.amazonaws.com/${aws_cognito_user_pool.family.id}"
+}

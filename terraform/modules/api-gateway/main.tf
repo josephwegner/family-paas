@@ -43,12 +43,29 @@ resource "aws_apigatewayv2_integration" "this" {
   payload_format_version = "2.0"
 }
 
+resource "aws_apigatewayv2_authorizer" "jwt" {
+  count = var.auth != null ? 1 : 0
+
+  api_id           = aws_apigatewayv2_api.this.id
+  authorizer_type  = "JWT"
+  identity_sources = ["$request.header.Authorization"]
+  name             = "${var.app_name}-jwt-auth"
+
+  jwt_configuration {
+    issuer   = var.auth.issuer
+    audience = var.auth.audience
+  }
+}
+
 resource "aws_apigatewayv2_route" "this" {
   for_each = { for r in var.routes : r.route_key => r }
 
   api_id    = aws_apigatewayv2_api.this.id
   route_key = each.value.route_key
   target    = "integrations/${aws_apigatewayv2_integration.this[each.key].id}"
+
+  authorization_type = each.value.auth_required && var.auth != null ? "JWT" : "NONE"
+  authorizer_id      = each.value.auth_required && var.auth != null ? aws_apigatewayv2_authorizer.jwt[0].id : null
 }
 
 resource "aws_lambda_permission" "this" {

@@ -53,12 +53,29 @@ module "lambdas" {
   s3_key                = each.value.s3_key
 }
 
+## Uncomment to enable Cognito auth:
+# module "auth" {
+#   source       = "git::https://github.com/josephwegner/family-paas.git//terraform/modules/cognito-app-client?ref=main"
+#   app_name     = var.app_name
+#   environment  = var.environment
+#   user_pool_id = data.terraform_remote_state.shared.outputs.cognito_user_pool_id
+# }
+
 module "api" {
   source      = "git::https://github.com/josephwegner/family-paas.git//terraform/modules/api-gateway?ref=main"
   app_name    = var.app_name
   environment = var.environment
+
+  ## Uncomment to enable JWT auth (requires the auth module above):
+  # auth = {
+  #   issuer   = data.terraform_remote_state.shared.outputs.cognito_user_pool_issuer
+  #   audience = [module.auth.client_id]
+  # }
+
   routes = [
     { route_key = "GET /api/example", function_arn = module.lambdas["example"].invoke_arn, function_name = module.lambdas["example"].function_name },
+    ## Example authenticated route:
+    # { route_key = "POST /api/protected", function_arn = module.lambdas["protected"].invoke_arn, function_name = module.lambdas["protected"].function_name, auth_required = true },
   ]
 }
 

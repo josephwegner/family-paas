@@ -14,5 +14,15 @@ variable "routes" {
     route_key     = string
     function_arn  = string
     function_name = string
+    auth_required = optional(bool, false)
   }))
+}
+
+variable "auth" {
+  description = "Optional JWT auth configuration. When set, creates a JWT authorizer for routes with auth_required = true."
+  type = object({
+    issuer   = string
+    audience = list(string)
+  })
+  default = null
 }

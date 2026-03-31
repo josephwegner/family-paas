@@ -1,0 +1,19 @@
+{
+  "name": "@family-paas/auth",
+  "version": "1.0.0",
+  "description": "Frontend auth helpers for Cognito-based authentication",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc"
+  },
+  "peerDependencies": {
+    "amazon-cognito-identity-js": "^6.0.0"
+  },
+  "devDependencies": {
+    "amazon-cognito-identity-js": "^6.3.0",
+    "typescript": "~5.9.0"
+  }
+}

@@ -6,12 +6,13 @@ Shared platform for family web apps. Provides Terraform modules, npm packages, a
 
 ```
 terraform/
-  modules/          Reusable Terraform modules (Lambda, API Gateway, CloudFront, DynamoDB)
-  shared/           Shared infrastructure (Lambda deployment bucket, shared DynamoDB, shared media bucket)
+  modules/          Reusable Terraform modules (Lambda, API Gateway, CloudFront, DynamoDB, Cognito)
+  shared/           Shared infrastructure (Lambda deployment bucket, shared DynamoDB, shared media bucket, Cognito user pool)
 packages/
   lambda-response/  family-paas/lambda-response - Lambda response helpers
   lambda-simulator/ family-paas/lambda-simulator - Express-based Lambda simulator for local dev
   deploy/           family-paas/deploy - Deploy CLI that reads app.config.json
+  auth/             family-paas/auth - Frontend auth helpers for Cognito
 templates/
   new-app/          Starter template for scaffolding a new app
 scripts/
@@ -27,6 +28,7 @@ These live in `terraform/shared/` and are referenced by apps via `terraform_remo
 | S3 bucket | `lambda-deployments-{account_id}` | Stores Lambda deployment zips for all apps |
 | S3 bucket | `shared-media-{account_id}` | Shared media/asset storage |
 | DynamoDB table | `shared-app-data` | Shared key-value store (pk/sk schema) |
+| Cognito User Pool | `family-paas-users` | Shared auth — one pool, separate app clients per app |
 
 Apps access them in their `terraform/main.tf`:
 ```hcl
@@ -64,18 +66,28 @@ module "lambdas" {
 ```
 
 ### api-gateway
-Creates an HTTP API v2 with routes, integrations, and Lambda permissions.
+Creates an HTTP API v2 with routes, integrations, and Lambda permissions. Optionally adds a JWT authorizer for Cognito-based auth.
 
 ```hcl
 module "api" {
   source      = "git::https://github.com/josephwegner/family-paas.git//terraform/modules/api-gateway?ref=main"
   app_name    = "my-app"
   environment = "prod"
+
+  # Optional: enable JWT auth (requires cognito-app-client module)
+  auth = {
+    issuer   = data.terraform_remote_state.shared.outputs.cognito_user_pool_issuer
+    audience = [module.auth.client_id]
+  }
+
   routes = [
-    { route_key = "GET /api/hello", function_arn = module.lambdas["my-func"].invoke_arn, function_name = module.lambdas["my-func"].function_name },
+    { route_key = "GET /api/public", function_arn = module.lambdas["public"].invoke_arn, function_name = module.lambdas["public"].function_name },
+    { route_key = "GET /api/private", function_arn = module.lambdas["private"].invoke_arn, function_name = module.lambdas["private"].function_name, auth_required = true },
   ]
 }
 ```
+
+When `auth` is set, routes with `auth_required = true` require a valid JWT in the `Authorization` header. Routes without `auth_required` (or with it set to `false`) remain public. If `auth` is omitted entirely, the module behaves exactly as before.
 
 ### frontend-hosting
 Creates S3 + CloudFront with OAC, API origin, and SPA fallback.
@@ -90,6 +102,20 @@ module "frontend" {
   acm_certificate_arn  = "arn:aws:acm:..."       # optional
 }
 ```
+
+### cognito-app-client
+Creates a Cognito app client in the shared user pool for a specific app.
+
+```hcl
+module "auth" {
+  source       = "git::https://github.com/josephwegner/family-paas.git//terraform/modules/cognito-app-client?ref=main"
+  app_name     = "my-app"
+  environment  = "prod"
+  user_pool_id = data.terraform_remote_state.shared.outputs.cognito_user_pool_id
+}
+```
+
+Outputs `client_id` — pass this to the API Gateway `auth` config and your frontend auth setup.
 
 ### dynamodb-table
 Creates a DynamoDB table with optional GSIs.
@@ -133,6 +159,64 @@ Used in `local-dev/server.ts` to simulate Lambda + API Gateway locally:
 ```ts
 import { simulateLambda } from 'family-paas/lambda-simulator';
 app.get('/api/hello', (req, res) => simulateLambda(handler, req, res));
+```
+
+For authenticated routes, pass `{ simulateAuth: true }` to decode the JWT from the `Authorization` header and inject claims into `event.requestContext.authorizer.jwt`:
+
+```ts
+app.get('/api/private', (req, res) => simulateLambda(handler, req, res, { simulateAuth: true }));
+```
+
+### family-paas/auth
+
+Frontend auth helpers wrapping AWS Cognito. Framework-agnostic — works with React, Vue, vanilla JS, etc. Apps need to install `amazon-cognito-identity-js` as a peer dependency.
+
+```ts
+import { createAuth } from 'family-paas/auth';
+
+const auth = createAuth({
+  userPoolId: 'us-east-1_XXXXX',  // from shared Terraform output
+  clientId: 'abc123',              // from cognito-app-client module output
+});
+
+// Sign up
+await auth.signUp('user@example.com', 'MyPassword123');
+await auth.confirmSignUp('user@example.com', '123456'); // code from verification email
+
+// Sign in
+const session = await auth.signIn('user@example.com', 'MyPassword123');
+
+// Make authenticated API calls
+const token = await auth.getIdToken();
+fetch('/api/private', {
+  headers: { Authorization: `Bearer ${token}` },
+});
+
+// Sign out
+auth.signOut();
+```
+
+Additional methods:
+
+- `completeNewPassword(email, tempPassword, newPassword)` — for admin-created accounts that require a password change on first login
+- `forgotPassword(email)` — sends a verification code to the user's email
+- `confirmForgotPassword(email, code, newPassword)` — completes the password reset
+- `getSession()` — returns the current session (auto-refreshes expired tokens), or `null` if not signed in
+- `getCurrentUserEmail()` — returns the signed-in user's email, or `null`
+
+When `signIn` encounters a new-password-required challenge, it rejects with a `NewPasswordRequiredError`. Catch this to show a new-password form, then call `completeNewPassword`.
+
+#### Reading the authenticated user in Lambda handlers
+
+For routes with `auth_required = true`, API Gateway validates the JWT and injects claims into the event. No auth logic needed in the handler:
+
+```ts
+export const handler = async (event: APIGatewayProxyEvent) => {
+  const claims = (event.requestContext as any).authorizer?.jwt?.claims;
+  const userId = claims?.sub;
+  const email = claims?.email;
+  // ...
+};
 ```
 
 ### family-paas/deploy

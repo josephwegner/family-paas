@@ -21,6 +21,11 @@ app.get('/api/example', async (req, res) => {
   await simulateLambda(exampleHandler, req, res);
 });
 
+// Example: authenticated route (decodes JWT from Authorization header into event.requestContext.authorizer)
+// app.post('/api/protected', async (req, res) => {
+//   await simulateLambda(protectedHandler, req, res, { simulateAuth: true });
+// });
+
 app.listen(PORT, () => {
   console.log(`Local dev server running on http://localhost:${PORT}`);
 });

@@ -5,13 +5,29 @@ import {
   Context,
 } from 'aws-lambda';
 
+export interface SimulatorOptions {
+  simulateAuth?: boolean;
+}
+
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = Buffer.from(parts[1], 'base64url').toString('utf-8');
+    return JSON.parse(payload);
+  } catch {
+    return null;
+  }
+}
+
 export async function simulateLambda(
   handler: (
     event: APIGatewayProxyEvent,
     context: Context
   ) => Promise<APIGatewayProxyResult>,
   req: Request,
-  res: Response
+  res: Response,
+  options?: SimulatorOptions
 ): Promise<void> {
   const event: APIGatewayProxyEvent = {
     resource: req.route?.path || '',
@@ -41,6 +57,18 @@ export async function simulateLambda(
     body: req.body ? JSON.stringify(req.body) : null,
     isBase64Encoded: false,
   };
+
+  if (options?.simulateAuth) {
+    const authHeader = req.headers['authorization'] as string | undefined;
+    if (authHeader?.startsWith('Bearer ')) {
+      const claims = decodeJwtPayload(authHeader.slice(7));
+      if (claims) {
+        (event.requestContext as any).authorizer = {
+          jwt: { claims, scopes: [] },
+        };
+      }
+    }
+  }
 
   const context: Context = {
     callbackWaitsForEmptyEventLoop: true,

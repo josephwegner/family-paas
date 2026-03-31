@@ -89,6 +89,38 @@ resource "aws_dynamodb_table" "shared_data" {
   }
 }
 
+resource "aws_cognito_user_pool" "family" {
+  name = "family-paas-users"
+
+  username_attributes      = ["email"]
+  auto_verified_attributes = ["email"]
+
+  password_policy {
+    minimum_length    = 12
+    require_lowercase = true
+    require_uppercase = true
+    require_numbers   = true
+    require_symbols   = false
+  }
+
+  schema {
+    name                = "email"
+    attribute_data_type = "String"
+    required            = true
+    mutable             = true
+  }
+
+  email_configuration {
+    email_sending_account = "COGNITO_DEFAULT"
+  }
+
+  tags = {
+    Name        = "Family PaaS Users"
+    Environment = "shared"
+    ManagedBy   = "terraform"
+  }
+}
+
 resource "aws_iam_account_password_policy" "strict" {
   minimum_password_length        = 14
   require_lowercase_characters   = true

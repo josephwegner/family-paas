@@ -6,6 +6,11 @@ export const handler = async (
   context: Context
 ): Promise<APIGatewayProxyResult> => {
   try {
+    // For authenticated routes, read the user from JWT claims:
+    // const claims = (event.requestContext as any).authorizer?.jwt?.claims;
+    // const userId = claims?.sub;
+    // const email = claims?.email;
+
     return createSuccessResponse({ message: 'Hello from your new app!' });
   } catch (error) {
     return createErrorResponse(500, 'Internal server error', error);

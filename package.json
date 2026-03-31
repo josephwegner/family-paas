@@ -6,6 +6,7 @@
   "exports": {
     "./lambda-response": "./packages/lambda-response/src/index.ts",
     "./lambda-simulator": "./packages/lambda-simulator/src/index.ts",
-    "./deploy": "./packages/deploy/src/index.ts"
+    "./deploy": "./packages/deploy/src/index.ts",
+    "./auth": "./packages/auth/src/index.ts"
   }
 }
