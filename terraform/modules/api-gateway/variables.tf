@@ -26,3 +26,21 @@ variable "auth" {
   })
   default = null
 }
+
+variable "cors_allowed_origins" {
+  description = "Explicit list of allowed CORS origins. Defaults to '*' for backward compatibility with apps that don't need scoping; apps with authenticated routes should pass explicit origins."
+  type        = list(string)
+  default     = ["*"]
+}
+
+variable "enable_access_logging" {
+  description = "Enable privacy-safe structured access logging to CloudWatch (request id, route, status, latency only)"
+  type        = bool
+  default     = true
+}
+
+variable "access_log_retention_days" {
+  description = "CloudWatch Logs retention for the access log group"
+  type        = number
+  default     = 30
+}

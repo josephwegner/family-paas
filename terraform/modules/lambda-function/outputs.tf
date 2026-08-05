@@ -12,3 +12,18 @@ output "invoke_arn" {
   description = "Invoke ARN of the Lambda function"
   value       = aws_lambda_function.this.invoke_arn
 }
+
+output "version" {
+  description = "Immutable published version number, deployed by this apply (rollback: repoint the alias to a prior version)"
+  value       = aws_lambda_function.this.version
+}
+
+output "qualified_arn" {
+  description = "ARN of the stable 'live' alias used by API Gateway/CI; repoint to a prior version to roll back"
+  value       = aws_lambda_alias.live.arn
+}
+
+output "log_group_name" {
+  description = "CloudWatch log group name for this function"
+  value       = aws_cloudwatch_log_group.this.name
+}

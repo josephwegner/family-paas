@@ -92,27 +92,46 @@ resource "aws_dynamodb_table" "shared_data" {
 resource "aws_cognito_user_pool" "family" {
   name = "family-paas-users"
 
-  username_attributes      = ["email"]
-  auto_verified_attributes = ["email"]
+  # Username-based sign-in (immutable, globally unique, case-insensitive)
+  # rather than email-as-username. Email/phone remain optional attributes,
+  # not required and not used as sign-in aliases.
+  username_configuration {
+    case_sensitive = false
+  }
 
+  # Default Cognito password policy and throttling — no adaptive-security or
+  # bespoke lockout system.
   password_policy {
-    minimum_length    = 12
+    minimum_length    = 8
     require_lowercase = true
     require_uppercase = true
     require_numbers   = true
-    require_symbols   = false
+    require_symbols   = true
   }
 
   schema {
     name                = "email"
     attribute_data_type = "String"
-    required            = true
+    required            = false
     mutable             = true
   }
 
-  email_configuration {
-    email_sending_account = "COGNITO_DEFAULT"
+  schema {
+    name                = "phone_number"
+    attribute_data_type = "String"
+    required            = false
+    mutable             = true
   }
+
+  # Self-registration (sign-up) stays enabled at the Cognito layer; it only
+  # creates an unattached identity. Any app-specific server-validated
+  # onboarding flow is enforced at the application layer, not here.
+  admin_create_user_config {
+    allow_admin_create_user_only = false
+  }
+
+  # Reviewed safeguard against accidental deletion once real users exist.
+  deletion_protection = "ACTIVE"
 
   tags = {
     Name        = "Family PaaS Users"

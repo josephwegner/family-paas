@@ -40,17 +40,17 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
 }
 
 module "lambdas" {
-  source   = "git::https://github.com/josephwegner/family-paas.git//terraform/modules/lambda-function?ref=main"
+  source = "git::https://github.com/josephwegner/family-paas.git//terraform/modules/lambda-function?ref=main"
   for_each = {
     "example" = { s3_key = "${var.app_name}/${var.environment}/example.zip" }
   }
 
-  function_name         = each.key
-  app_name              = var.app_name
-  environment           = var.environment
-  lambda_role_arn       = aws_iam_role.lambda_role.arn
-  s3_bucket             = local.lambda_bucket
-  s3_key                = each.value.s3_key
+  function_name   = each.key
+  app_name        = var.app_name
+  environment     = var.environment
+  lambda_role_arn = aws_iam_role.lambda_role.arn
+  s3_bucket       = local.lambda_bucket
+  s3_key          = each.value.s3_key
 }
 
 ## Uncomment to enable Cognito auth:
@@ -61,10 +61,59 @@ module "lambdas" {
 #   user_pool_id = data.terraform_remote_state.shared.outputs.cognito_user_pool_id
 # }
 
+## Uncomment to give this app a dedicated on-demand table (PITR and deletion
+## protection are enabled by default; add global_secondary_indexes only when
+## a real query pattern needs one):
+# module "table" {
+#   source      = "git::https://github.com/josephwegner/family-paas.git//terraform/modules/dynamodb-table?ref=main"
+#   table_name  = "${var.app_name}-data-${var.environment}"
+#   environment = var.environment
+#   hash_key    = "pk"
+#   range_key   = "sk"
+#   attributes = [
+#     { name = "pk", type = "S" },
+#     { name = "sk", type = "S" },
+#   ]
+# }
+
+## Uncomment alongside module "table" above to scope the Lambda role to only
+## that table (replaces the need for a broader inline policy):
+# resource "aws_iam_role_policy" "lambda_table_access" {
+#   name = "${var.app_name}-table-access-${var.environment}"
+#   role = aws_iam_role.lambda_role.id
+#
+#   policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [{
+#       Effect = "Allow"
+#       Action = [
+#         "dynamodb:GetItem",
+#         "dynamodb:PutItem",
+#         "dynamodb:UpdateItem",
+#         "dynamodb:DeleteItem",
+#         "dynamodb:Query",
+#         "dynamodb:BatchGetItem",
+#         "dynamodb:BatchWriteItem",
+#         "dynamodb:ConditionCheckItem",
+#         "dynamodb:TransactGetItems",
+#         "dynamodb:TransactWriteItems",
+#       ]
+#       Resource = [
+#         module.table.table_arn,
+#         "${module.table.table_arn}/index/*",
+#       ]
+#     }]
+#   })
+# }
+
 module "api" {
   source      = "git::https://github.com/josephwegner/family-paas.git//terraform/modules/api-gateway?ref=main"
   app_name    = var.app_name
   environment = var.environment
+
+  ## Restrict to explicit origins once this app has known dev/prod origins
+  ## (defaults to "*" for apps without authenticated routes):
+  # cors_allowed_origins = var.allowed_origins
 
   ## Uncomment to enable JWT auth (requires the auth module above):
   # auth = {

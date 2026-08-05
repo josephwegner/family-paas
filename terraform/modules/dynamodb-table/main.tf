@@ -22,6 +22,16 @@ resource "aws_dynamodb_table" "this" {
     }
   }
 
+  point_in_time_recovery {
+    enabled = var.point_in_time_recovery_enabled
+  }
+
+  server_side_encryption {
+    enabled = true
+  }
+
+  deletion_protection_enabled = var.deletion_protection_enabled
+
   tags = {
     Name        = var.table_name
     Environment = var.environment

@@ -45,3 +45,9 @@ variable "memory_size" {
   type        = number
   default     = 512
 }
+
+variable "log_retention_days" {
+  description = "CloudWatch Logs retention for this function's log group"
+  type        = number
+  default     = 30
+}

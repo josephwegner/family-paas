@@ -3,7 +3,7 @@ resource "aws_apigatewayv2_api" "this" {
   protocol_type = "HTTP"
 
   cors_configuration {
-    allow_origins = ["*"]
+    allow_origins = var.cors_allowed_origins
     allow_methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
     allow_headers = ["content-type", "x-amz-date", "authorization", "x-api-key", "x-amz-security-token"]
     max_age       = 300
@@ -11,6 +11,18 @@ resource "aws_apigatewayv2_api" "this" {
 
   tags = {
     Name        = "${var.app_name}-api"
+    Environment = var.environment
+    ManagedBy   = "terraform"
+  }
+}
+
+resource "aws_cloudwatch_log_group" "access_logs" {
+  count             = var.enable_access_logging ? 1 : 0
+  name              = "/aws/apigateway/${var.app_name}-${var.environment}"
+  retention_in_days = var.access_log_retention_days
+
+  tags = {
+    Name        = "${var.app_name}-api-access-logs"
     Environment = var.environment
     ManagedBy   = "terraform"
   }
@@ -24,6 +36,26 @@ resource "aws_apigatewayv2_stage" "default" {
   default_route_settings {
     throttling_burst_limit = 5000
     throttling_rate_limit  = 10000
+  }
+
+  dynamic "access_log_settings" {
+    for_each = var.enable_access_logging ? [1] : []
+    content {
+      destination_arn = aws_cloudwatch_log_group.access_logs[0].arn
+      # Privacy-safe fields only: request id, route, method, status, latency, and
+      # authorizer error (denial outcome). No headers, query strings, or bodies.
+      format = jsonencode({
+        requestId            = "$context.requestId"
+        routeKey             = "$context.routeKey"
+        httpMethod           = "$context.httpMethod"
+        status               = "$context.status"
+        responseLength       = "$context.responseLength"
+        integrationLatencyMs = "$context.integrationLatency"
+        latencyMs            = "$context.responseLatency"
+        authorizerError      = "$context.authorizer.error"
+        errorMessage         = "$context.error.message"
+      })
+    }
   }
 
   tags = {

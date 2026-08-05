@@ -11,9 +11,12 @@ resource "aws_cognito_user_pool_client" "this" {
 
   supported_identity_providers = ["COGNITO"]
 
-  access_token_validity  = 1
-  id_token_validity      = 1
-  refresh_token_validity = 30
+  prevent_user_existence_errors = "ENABLED"
+  enable_token_revocation       = true
+
+  access_token_validity  = var.access_token_validity_hours
+  id_token_validity      = var.id_token_validity_hours
+  refresh_token_validity = var.refresh_token_validity_days
 
   token_validity_units {
     access_token  = "hours"

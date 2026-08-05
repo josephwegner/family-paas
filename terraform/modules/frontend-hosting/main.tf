@@ -15,6 +15,14 @@ resource "aws_s3_bucket" "frontend" {
   }
 }
 
+resource "aws_s3_bucket_versioning" "frontend" {
+  bucket = aws_s3_bucket.frontend.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
 resource "aws_s3_bucket_public_access_block" "frontend" {
   bucket = aws_s3_bucket.frontend.id
 
@@ -56,6 +64,29 @@ resource "aws_s3_bucket_policy" "frontend" {
   depends_on = [aws_s3_bucket_public_access_block.frontend]
 }
 
+resource "aws_cloudfront_function" "spa_fallback" {
+  name    = "${var.app_name}-spa-fallback-${var.environment}"
+  runtime = "cloudfront-js-2.0"
+  comment = "Rewrite extensionless navigation paths to /index.html for SPA routing. Requests with a file extension (real static assets) pass through unchanged and surface their real 404, matching /api/* is routed to a separate origin and never touches this function."
+  publish = true
+  code    = <<-EOT
+    function handler(event) {
+      var request = event.request;
+      var uri = request.uri;
+
+      // Leave requests for real static assets (anything with a file extension)
+      // untouched so missing assets return a real 404 instead of the app shell.
+      if (uri.includes('.')) {
+        return request;
+      }
+
+      // Extensionless navigation path (e.g. /household) -> SPA shell.
+      request.uri = '/index.html';
+      return request;
+    }
+  EOT
+}
+
 resource "aws_cloudfront_distribution" "frontend" {
   enabled             = true
   is_ipv6_enabled     = true
@@ -89,6 +120,11 @@ resource "aws_cloudfront_distribution" "frontend" {
     viewer_protocol_policy = "redirect-to-https"
     compress               = true
 
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.spa_fallback.arn
+    }
+
     forwarded_values {
       query_string = false
       cookies {
@@ -120,18 +156,6 @@ resource "aws_cloudfront_distribution" "frontend" {
     min_ttl                = 0
     default_ttl            = 0
     max_ttl                = 0
-  }
-
-  custom_error_response {
-    error_code         = 404
-    response_code      = 200
-    response_page_path = "/index.html"
-  }
-
-  custom_error_response {
-    error_code         = 403
-    response_code      = 200
-    response_page_path = "/index.html"
   }
 
   restrictions {
