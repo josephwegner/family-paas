@@ -67,7 +67,7 @@ resource "aws_s3_bucket_policy" "frontend" {
 resource "aws_cloudfront_function" "spa_fallback" {
   name    = "${var.app_name}-spa-fallback-${var.environment}"
   runtime = "cloudfront-js-2.0"
-  comment = "Rewrite extensionless navigation paths to /index.html for SPA routing. Requests with a file extension (real static assets) pass through unchanged and surface their real 404, matching /api/* is routed to a separate origin and never touches this function."
+  comment = "Rewrite extensionless navigation paths to /index.html for SPA routing."
   publish = true
   code    = <<-EOT
     function handler(event) {
@@ -76,6 +76,8 @@ resource "aws_cloudfront_function" "spa_fallback" {
 
       // Leave requests for real static assets (anything with a file extension)
       // untouched so missing assets return a real 404 instead of the app shell.
+      // /api/* is routed to a separate CloudFront origin and never reaches
+      // this function at all.
       if (uri.includes('.')) {
         return request;
       }
