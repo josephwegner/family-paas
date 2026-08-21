@@ -21,6 +21,10 @@ resource "aws_lambda_function" "this" {
   s3_bucket = var.s3_bucket
   s3_key    = var.s3_key
 
+  # Supplying this hash makes a new ZIP at an unchanged S3 key visible to
+  # Terraform. With publish = true, Lambda then creates a new numbered version.
+  source_code_hash = var.source_code_hash
+
   environment {
     variables = merge(
       { NODE_ENV = "production" },

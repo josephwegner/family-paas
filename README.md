@@ -49,12 +49,18 @@ locals {
 ## Terraform modules
 
 ### lambda-function
-Creates a Lambda function with standard tags and NODE_ENV=production.
+Creates a Lambda function with standard tags, NODE_ENV=production, a published
+version for each code update, and a stable `live` alias.
 
 ```hcl
 module "lambdas" {
   source   = "git::https://github.com/josephwegner/family-paas.git//terraform/modules/lambda-function?ref=main"
-  for_each = { "my-func" = { s3_key = "my-app/prod/my-func.zip" } }
+  for_each = {
+    "my-func" = {
+      s3_key          = "my-app/prod/my-func.zip"
+      source_code_hash = var.my_func_source_code_hash
+    }
+  }
 
   function_name   = each.key
   app_name        = "my-app"
@@ -62,8 +68,42 @@ module "lambdas" {
   lambda_role_arn = aws_iam_role.lambda_role.arn
   s3_bucket       = local.lambda_bucket
   s3_key          = each.value.s3_key
+  source_code_hash = each.value.source_code_hash
 }
 ```
+
+#### Stable S3 keys and code updates
+
+When an application replaces a ZIP at the same S3 key, pass its
+base64-encoded **raw SHA-256** as `source_code_hash`. This makes the ZIP's
+content part of the Terraform configuration: a changed hash updates the Lambda
+code, `publish = true` creates a new immutable numbered version, and the
+`live` alias advances to it. Omitting the optional value preserves the existing
+behavior for consumers that do not need this detection.
+
+For a ZIP at `dist/lambdas/session.zip`, generate the Terraform value with:
+
+```bash
+openssl dgst -sha256 -binary dist/lambdas/session.zip | base64
+```
+
+For example, a release-specific Terraform input can be supplied as
+`session_lambda_source_code_hash` and wired into the module:
+
+```hcl
+variable "session_lambda_source_code_hash" {
+  description = "Base64-encoded raw SHA-256 of dist/lambdas/session.zip"
+  type        = string
+}
+
+module "lambdas" {
+  # existing configuration
+  source_code_hash = var.session_lambda_source_code_hash
+}
+```
+
+See [`terraform/modules/lambda-function/examples/stable-s3-key`](terraform/modules/lambda-function/examples/stable-s3-key)
+for an apply-level verification fixture.
 
 ### api-gateway
 Creates an HTTP API v2 with routes, integrations, and Lambda permissions. Optionally adds a JWT authorizer for Cognito-based auth.

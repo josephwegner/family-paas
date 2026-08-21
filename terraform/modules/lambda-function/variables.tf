@@ -28,6 +28,12 @@ variable "s3_key" {
   type        = string
 }
 
+variable "source_code_hash" {
+  description = "Base64-encoded SHA-256 hash of the Lambda deployment ZIP. When supplied, Terraform detects artifact-content changes at a stable S3 key."
+  type        = string
+  default     = null
+}
+
 variable "environment_variables" {
   description = "Environment variables for the Lambda function"
   type        = map(string)
