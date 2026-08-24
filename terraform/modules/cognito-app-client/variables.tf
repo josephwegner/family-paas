@@ -19,7 +19,7 @@ variable "client_name" {
   default     = null
 
   validation {
-    condition     = var.client_name == null || trimspace(var.client_name) != ""
+    condition     = var.client_name == null ? true : trimspace(var.client_name) != ""
     error_message = "client_name must be null or a non-empty string."
   }
 }
@@ -30,7 +30,7 @@ variable "explicit_auth_flows" {
   default     = null
 
   validation {
-    condition     = var.explicit_auth_flows == null || length(var.explicit_auth_flows) > 0
+    condition     = var.explicit_auth_flows == null ? true : length(var.explicit_auth_flows) > 0
     error_message = "explicit_auth_flows must be null or contain at least one flow; Cognito applies defaults to an empty collection."
   }
 }
@@ -41,7 +41,7 @@ variable "write_attributes" {
   default     = null
 
   validation {
-    condition     = var.write_attributes == null || length(var.write_attributes) > 0
+    condition     = var.write_attributes == null ? true : length(var.write_attributes) > 0
     error_message = "write_attributes must be null or contain at least one attribute; Cognito treats an empty collection as its permissive default."
   }
 }

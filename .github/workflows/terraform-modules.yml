@@ -12,6 +12,19 @@ on:
       - ".github/workflows/terraform-modules.yml"
 
 jobs:
+  cognito-app-client-terraform-1-5:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform/modules/cognito-app-client/tests/compatibility
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.7
+      - run: terraform init -backend=false
+      - run: terraform validate
+
   cognito-app-client:
     runs-on: ubuntu-latest
     defaults:
