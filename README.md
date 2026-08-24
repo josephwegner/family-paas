@@ -157,6 +157,19 @@ module "auth" {
 
 Outputs `client_id` — pass this to the API Gateway `auth` config and your frontend auth setup.
 
+Optional inputs support clients with narrower responsibilities:
+
+- `client_name` overrides the derived `<app_name>-<environment>` name.
+- `explicit_auth_flows` replaces the default SRP and refresh-token flows.
+- `write_attributes` configures an explicit non-empty attribute allowlist.
+
+Both collection overrides reject an empty set. Cognito treats an empty
+`WriteAttributes` collection as omitted and restores its permissive default for
+standard attributes; an empty collection is not a deny-all policy.
+
+See [the Todone Cognito client handoff](docs/todone-cognito-client-handoff.md)
+for the reviewed two-client pattern and its mandatory AWS acceptance checks.
+
 ### dynamodb-table
 Creates a DynamoDB table with optional GSIs.
 

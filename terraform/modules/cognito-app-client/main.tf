@@ -1,13 +1,17 @@
 resource "aws_cognito_user_pool_client" "this" {
-  name         = "${var.app_name}-${var.environment}"
+  name         = coalesce(var.client_name, "${var.app_name}-${var.environment}")
   user_pool_id = var.user_pool_id
 
   generate_secret = false
 
-  explicit_auth_flows = [
+  explicit_auth_flows = coalesce(var.explicit_auth_flows, [
     "ALLOW_USER_SRP_AUTH",
     "ALLOW_REFRESH_TOKEN_AUTH",
-  ]
+  ])
+
+  # Cognito treats an omitted or empty write-attribute collection as its
+  # permissive default. variables.tf rejects an explicitly empty collection.
+  write_attributes = var.write_attributes
 
   supported_identity_providers = ["COGNITO"]
 

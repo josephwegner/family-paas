@@ -1,0 +1,28 @@
+name: Terraform modules
+
+on:
+  pull_request:
+    paths:
+      - "terraform/modules/**"
+      - ".github/workflows/terraform-modules.yml"
+  push:
+    branches: [main]
+    paths:
+      - "terraform/modules/**"
+      - ".github/workflows/terraform-modules.yml"
+
+jobs:
+  cognito-app-client:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform/modules/cognito-app-client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.9
+      - run: terraform fmt -check -recursive
+      - run: terraform init -backend=false
+      - run: terraform validate
+      - run: terraform test
