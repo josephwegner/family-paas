@@ -1,13 +1,18 @@
 # family-paas
 
-Shared platform for family web apps. Provides Terraform modules, npm packages, and deploy tooling so each app stays in its own repo but shares a common infrastructure pattern.
+Shared platform for family web apps. Each person deploys into an isolated AWS
+workload account while reusing Terraform modules, npm packages, central state,
+and coordinated DNS.
 
 ## What's in this repo
 
 ```
 terraform/
   modules/          Reusable Terraform modules (Lambda, API Gateway, CloudFront, DynamoDB, Cognito)
-  shared/           Shared infrastructure (Lambda deployment bucket, shared DynamoDB, shared media bucket, Cognito user pool)
+  management/       AWS Organization, member accounts, budget, and Identity Center assignments
+  platform/         Central state and tenant-scoped state roles
+  workload-bootstrap/ Account-local Lambda deployment bucket
+  shared/           Legacy single-account resources retained during migration
 packages/
   lambda-response/  family-paas/lambda-response - Lambda response helpers
   lambda-simulator/ family-paas/lambda-simulator - Express-based Lambda simulator for local dev
@@ -19,32 +24,25 @@ scripts/
   create-app.sh     Scaffold a new app repo from the template
 ```
 
-## Shared resources
+## Account architecture
 
-These live in `terraform/shared/` and are referenced by apps via `terraform_remote_state`:
+Account `743837809639` is the Organizations management and consolidated-billing
+account. It contains no new application or platform resources. `joe-platform`
+owns central Terraform state. DNS remains at its existing provider. Each person,
+starting with `joe-workload` and `scott`, receives one workload account for all
+of their application compute, storage, logs, deployment artifacts, CloudFront,
+and ACM certificates.
 
-| Resource | Name | Purpose |
-|----------|------|---------|
-| S3 bucket | `lambda-deployments-{account_id}` | Stores Lambda deployment zips for all apps |
-| S3 bucket | `shared-media-{account_id}` | Shared media/asset storage |
-| DynamoDB table | `shared-app-data` | Shared key-value store (pk/sk schema) |
-| Cognito User Pool | `family-paas-users` | Shared auth — one pool, separate app clients per app |
+Tenant state uses `tenants/<tenant>/` keys and a distinct platform role. Apps
+receive non-sensitive values from `app.config.json`; they never read platform
+state through `terraform_remote_state`. Workload-local storage is the default.
+The legacy `shared-media-*` bucket and `shared-app-data` table are not available
+to newly onboarded tenant applications.
 
-Apps access them in their `terraform/main.tf`:
-```hcl
-data "terraform_remote_state" "shared" {
-  backend = "s3"
-  config = {
-    bucket = "terraform-state-743837809639"
-    key    = "shared/terraform.tfstate"
-    region = "us-east-1"
-  }
-}
-
-locals {
-  lambda_bucket = data.terraform_remote_state.shared.outputs.lambda_deployments_bucket
-}
-```
+See [`docs/multi-account/operations.md`](docs/multi-account/operations.md) for
+account and identity procedures and
+[`docs/multi-account/migration.md`](docs/multi-account/migration.md) for the
+staged migration and rollback process.
 
 ## Terraform modules
 
@@ -114,10 +112,10 @@ module "api" {
   app_name    = "my-app"
   environment = "prod"
 
-  # Optional: enable JWT auth (requires cognito-app-client module)
+  # Optional JWT issuer and audience from an independently approved identity integration
   auth = {
-    issuer   = data.terraform_remote_state.shared.outputs.cognito_user_pool_issuer
-    audience = [module.auth.client_id]
+    issuer   = var.jwt_issuer
+    audience = var.jwt_audience
   }
 
   routes = [
@@ -143,15 +141,17 @@ module "frontend" {
 }
 ```
 
-### cognito-app-client
-Creates a Cognito app client in the shared user pool for a specific app.
+### cognito-app-client (legacy)
+Creates a Cognito app client when Terraform already runs in the user pool's
+account. It is not part of new multi-account onboarding; cross-account Cognito
+requires a separate architecture decision.
 
 ```hcl
 module "auth" {
   source       = "git::https://github.com/josephwegner/family-paas.git//terraform/modules/cognito-app-client?ref=main"
   app_name     = "my-app"
   environment  = "prod"
-  user_pool_id = data.terraform_remote_state.shared.outputs.cognito_user_pool_id
+  user_pool_id = var.user_pool_id
 }
 ```
 
@@ -228,7 +228,7 @@ Frontend auth helpers wrapping AWS Cognito. Framework-agnostic — works with Re
 import { createAuth } from 'family-paas/auth';
 
 const auth = createAuth({
-  userPoolId: 'us-east-1_XXXXX',  // from shared Terraform output
+  userPoolId: 'us-east-1_XXXXX',  // from an approved identity integration
   clientId: 'abc123',              // from cognito-app-client module output
 });
 
@@ -295,9 +295,50 @@ npm install
 
 ## Deploy workflow
 
+Authenticate with the tenant's MFA-backed IAM Identity Center session. Durable
+access keys and GitHub secrets are not supported.
+
+```bash
+aws sso login --profile family-paas-joe
+AWS_PROFILE=family-paas-joe npm run terraform:init
+AWS_PROFILE=family-paas-joe npm run deploy
+```
+
+The initialization and deploy commands call STS first and stop before builds,
+uploads, Terraform initialization, or frontend synchronization when the active
+account differs from `workloadAccountId` in `app.config.json`. Resource names
+use that validated account ID.
+
 **Routine code changes:** `npm run deploy` from within the app repo.
 
-**Infrastructure changes** (adding lambdas, changing routes, etc.): `cd terraform && terraform plan && terraform apply` within the app repo.
+**Infrastructure changes:** run `npm run terraform:init`, then
+`cd terraform && terraform plan && terraform apply` locally.
+
+## DNS and certificates
+
+DNS remains at the existing external provider and custom domains require the
+platform owner. Configure `domain_name` and leave `enable_custom_domain = false`
+for the first apply. Terraform creates a non-exportable ACM public certificate
+in the workload account's `us-east-1` region and outputs its validation CNAME.
+Add that record at the external provider and wait for ACM to report `ISSUED`.
+Then set `enable_custom_domain = true`, apply again, and point the application's
+external CNAME to `custom_domain_cname_target`. Until then, the application
+continues to work at its default CloudFront hostname. Review requested names
+for conflicts before creating either record. ACM public certificates have no
+direct certificate charge; normal CloudFront and external DNS usage remains.
+
+Account isolation prevents private AWS resource enumeration; it does not hide
+public applications from DNS, Certificate Transparency, passive DNS, crawlers,
+or anyone who knows a URL.
+
+## Cost visibility
+
+Consolidated billing attributes usage by linked workload account. The initial
+organization budget is $500/month, with actual-cost email at 80% and forecast
+email at 100% to `joe@joewegner.com`. Budget data is delayed monitoring, not a
+spending cap, and tenant roles cannot access consolidated billing. Per-account
+budgets and free AWS Organizations service control policies can be added later;
+neither is required for the account-level privacy boundary.
 
 ## Current apps
 

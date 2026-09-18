@@ -1,0 +1,28 @@
+management_account_id = "743837809639"
+
+member_accounts = {
+  joe_platform = {
+    name  = "joe-platform"
+    email = "family-paas-platform@joewegner.com"
+  }
+  joe_workload = {
+    name  = "joe-workload"
+    email = "family-paas-workload@joewegner.com"
+  }
+  scott = {
+    name  = "scott"
+    email = "swegner2@gmail.com"
+  }
+}
+
+monthly_budget_usd         = 500
+budget_actual_threshold    = 80
+budget_forecast_threshold  = 100
+budget_notification_emails = ["joe@joewegner.com"]
+
+# Enable IAM Identity Center in the Organizations management account after the
+# member accounts exist, then populate these values from the Identity Center UI.
+identity_center_instance_arn = null
+identity_center_region       = "us-east-2"
+tenant_principal_ids          = {}
+platform_role_arns            = {}

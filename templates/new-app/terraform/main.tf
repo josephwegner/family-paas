@@ -1,17 +1,15 @@
-data "terraform_remote_state" "shared" {
-  backend = "s3"
-  config = {
-    bucket = "terraform-state-743837809639"
-    key    = "shared/terraform.tfstate"
-    region = "us-east-1"
-  }
-}
-
 locals {
-  lambda_bucket = data.terraform_remote_state.shared.outputs.lambda_deployments_bucket
+  lambda_bucket = "lambda-deployments-${var.workload_account_id}"
 }
 
 data "aws_caller_identity" "current" {}
+
+check "workload_account" {
+  assert {
+    condition     = data.aws_caller_identity.current.account_id == var.workload_account_id
+    error_message = "Refusing to manage resources in an unexpected AWS account."
+  }
+}
 
 resource "aws_iam_role" "lambda_role" {
   name = "${var.app_name}-lambda-${var.environment}"
@@ -53,13 +51,8 @@ module "lambdas" {
   s3_key          = each.value.s3_key
 }
 
-## Uncomment to enable Cognito auth:
-# module "auth" {
-#   source       = "git::https://github.com/josephwegner/family-paas.git//terraform/modules/cognito-app-client?ref=main"
-#   app_name     = var.app_name
-#   environment  = var.environment
-#   user_pool_id = data.terraform_remote_state.shared.outputs.cognito_user_pool_id
-# }
+## Authentication is intentionally not scaffolded. Cross-account Cognito
+## integration requires a separately approved platform design.
 
 ## Uncomment to give this app a dedicated on-demand table (PITR and deletion
 ## protection are enabled by default; add global_secondary_indexes only when
@@ -115,12 +108,6 @@ module "api" {
   ## (defaults to "*" for apps without authenticated routes):
   # cors_allowed_origins = var.allowed_origins
 
-  ## Uncomment to enable JWT auth (requires the auth module above):
-  # auth = {
-  #   issuer   = data.terraform_remote_state.shared.outputs.cognito_user_pool_issuer
-  #   audience = [module.auth.client_id]
-  # }
-
   routes = [
     { route_key = "GET /api/example", function_arn = module.lambdas["example"].invoke_arn, function_name = module.lambdas["example"].function_name },
     ## Example authenticated route:
@@ -133,4 +120,6 @@ module "frontend" {
   app_name             = var.app_name
   environment          = var.environment
   api_gateway_endpoint = module.api.api_endpoint
+  domain_name          = var.domain_name
+  enable_custom_domain = var.enable_custom_domain
 }

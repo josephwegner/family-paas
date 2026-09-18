@@ -5,3 +5,9 @@ dist/
 *.tfstate.backup
 *.tfvars
 !*.tfvars.example
+*.tfbackend
+tenant.auto.tfvars.json
+account-creation.auto.tfvars.json
+.claude
+.codex
+.opencode

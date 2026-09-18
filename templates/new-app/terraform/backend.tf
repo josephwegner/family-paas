@@ -1,11 +1,7 @@
 terraform {
-  backend "s3" {
-    bucket         = "terraform-state-743837809639"
-    key            = "APP_NAME/prod/terraform.tfstate"
-    region         = "us-east-1"
-    dynamodb_table = "terraform-state-lock"
-    encrypt        = true
-  }
+  required_version = ">= 1.10.0"
+
+  backend "s3" {}
 
   required_providers {
     aws = {
@@ -16,5 +12,7 @@ terraform {
 }
 
 provider "aws" {
-  region = "us-east-1"
+  region = var.region
+
+  allowed_account_ids = [var.workload_account_id]
 }

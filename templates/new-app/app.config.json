@@ -1,7 +1,15 @@
 {
   "name": "APP_NAME",
+  "tenantId": "TENANT_ID",
+  "workloadAccountId": "WORKLOAD_ACCOUNT_ID",
   "environment": "prod",
   "region": "us-east-1",
+  "terraform": {
+    "stateBucket": "TERRAFORM_STATE_BUCKET",
+    "stateRegion": "us-east-1",
+    "statePrefix": "tenants/TENANT_ID/apps",
+    "stateRoleArn": "STATE_ROLE_ARN"
+  },
   "lambdas": ["example"],
   "frontend": {
     "buildCommand": "npm run build:frontend",

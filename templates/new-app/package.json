@@ -10,7 +10,8 @@
     "build:frontend": "echo 'Add your frontend build command here'",
     "deploy": "tsx node_modules/family-paas/packages/deploy/src/index.ts",
     "deploy:lambdas": "tsx node_modules/family-paas/packages/deploy/src/index.ts --lambdas-only",
-    "deploy:frontend": "tsx node_modules/family-paas/packages/deploy/src/index.ts --frontend-only"
+    "deploy:frontend": "tsx node_modules/family-paas/packages/deploy/src/index.ts --frontend-only",
+    "terraform:init": "tsx node_modules/family-paas/packages/deploy/src/index.ts --terraform-init"
   },
   "dependencies": {
     "family-paas": "github:josephwegner/family-paas#main",

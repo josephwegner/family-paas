@@ -3,7 +3,7 @@ set -e
 
 if [ -z "$1" ] || [ -z "$2" ]; then
   echo "Usage: ./scripts/create-app.sh <app-name> <destination-path>"
-  echo "Example: ./scripts/create-app.sh my-cool-app ~/Code/my-cool-app"
+  echo "After scaffolding, replace the tenant placeholders in app.config.json."
   exit 1
 fi
 
@@ -38,6 +38,7 @@ echo "  git init"
 echo "  npm install"
 echo "  npm run dev"
 echo ""
-echo "Don't forget to set GitHub secrets for Terraform CI:"
-echo "  gh secret set AWS_ACCESS_KEY_ID --repo josephwegner/$APP_NAME"
-echo "  gh secret set AWS_SECRET_ACCESS_KEY --repo josephwegner/$APP_NAME"
+echo "Configure app.config.json from the platform tenant registry, then run:"
+echo "  aws sso login --profile <tenant-profile>"
+echo "  AWS_PROFILE=<tenant-profile> npm run terraform:init"
+echo "  cd terraform && terraform plan && terraform apply"

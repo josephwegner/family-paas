@@ -1,5 +1,15 @@
 data "aws_caller_identity" "current" {}
 
+terraform {
+  required_version = ">= 1.6.0"
+
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+    }
+  }
+}
+
 locals {
   account_id  = data.aws_caller_identity.current.account_id
   bucket_name = "${var.app_name}-frontend-${var.environment}-${local.account_id}"
@@ -95,7 +105,7 @@ resource "aws_cloudfront_distribution" "frontend" {
   default_root_object = "index.html"
   price_class         = "PriceClass_100"
 
-  aliases = var.domain_name != "" ? [var.domain_name] : []
+  aliases = var.enable_custom_domain ? [var.domain_name] : []
 
   origin {
     domain_name              = aws_s3_bucket.frontend.bucket_regional_domain_name
@@ -167,15 +177,27 @@ resource "aws_cloudfront_distribution" "frontend" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = var.acm_certificate_arn == ""
-    acm_certificate_arn            = var.acm_certificate_arn != "" ? var.acm_certificate_arn : null
-    ssl_support_method             = var.acm_certificate_arn != "" ? "sni-only" : null
-    minimum_protocol_version       = var.acm_certificate_arn != "" ? "TLSv1.2_2021" : null
+    cloudfront_default_certificate = !var.enable_custom_domain
+    acm_certificate_arn            = var.enable_custom_domain ? aws_acm_certificate.frontend[0].arn : null
+    ssl_support_method             = var.enable_custom_domain ? "sni-only" : null
+    minimum_protocol_version       = var.enable_custom_domain ? "TLSv1.2_2021" : null
   }
 
   tags = {
     Name        = "${var.app_name}-cdn"
     Environment = var.environment
     ManagedBy   = "terraform"
+  }
+
+}
+
+resource "aws_acm_certificate" "frontend" {
+  count = var.domain_name != "" ? 1 : 0
+
+  domain_name       = var.domain_name
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
   }
 }

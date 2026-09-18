@@ -1,0 +1,13 @@
+platform_account_id = "111122223333"
+state_bucket_name   = "family-paas-terraform-state-111122223333"
+
+tenants = {
+  joe = {
+    workload_account_id   = "444455556666"
+    workload_principal_arn = "arn:aws:iam::444455556666:role/aws-reserved/sso.amazonaws.com/us-east-1/AWSReservedSSO_FamilyPaasWorkloadDeveloper_EXAMPLE"
+  }
+  scott = {
+    workload_account_id   = "777788889999"
+    workload_principal_arn = "arn:aws:iam::777788889999:role/aws-reserved/sso.amazonaws.com/us-east-1/AWSReservedSSO_FamilyPaasWorkloadDeveloper_EXAMPLE"
+  }
+}

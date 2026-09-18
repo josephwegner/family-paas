@@ -10,6 +10,29 @@ variable "environment" {
   default     = "prod"
 }
 
+variable "region" {
+  description = "Workload deployment region"
+  type        = string
+  default     = "us-east-1"
+}
+
+variable "workload_account_id" {
+  description = "Expected tenant workload account ID"
+  type        = string
+}
+
+variable "domain_name" {
+  description = "Registry-assigned application hostname; empty disables custom DNS"
+  type        = string
+  default     = ""
+}
+
+variable "enable_custom_domain" {
+  description = "Enable after ACM is issued and before creating the external application CNAME"
+  type        = bool
+  default     = false
+}
+
 variable "allowed_origins" {
   description = "Explicit browser origins (local dev + production) allowed to call this app's API. Only used if you wire cors_allowed_origins into module \"api\"."
   type        = list(string)

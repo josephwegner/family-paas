@@ -19,8 +19,13 @@ variable "domain_name" {
   default     = ""
 }
 
-variable "acm_certificate_arn" {
-  description = "ARN of the ACM certificate for custom domain (must be in us-east-1)"
-  type        = string
-  default     = ""
+variable "enable_custom_domain" {
+  description = "Enable the CloudFront alias only after external DNS validation makes the workload ACM certificate ISSUED."
+  type        = bool
+  default     = false
+
+  validation {
+    condition     = !var.enable_custom_domain || var.domain_name != ""
+    error_message = "domain_name is required when enable_custom_domain is true."
+  }
 }
