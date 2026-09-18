@@ -13,7 +13,7 @@
   "lambdas": ["example"],
   "frontend": {
     "buildCommand": "npm run build:frontend",
-    "distDir": "dist"
+    "distDir": "dist/frontend"
   },
   "esbuild": {
     "target": "node20",

@@ -96,6 +96,7 @@ resource "aws_ssoadmin_permission_set_inline_policy" "workload_developer" {
           "acm:*", "apigateway:*", "cloudfront:*", "cloudwatch:*",
           "dynamodb:*", "ec2:Describe*", "iam:Get*", "iam:List*",
           "iam:PassRole", "iam:CreateRole", "iam:DeleteRole",
+          "iam:TagRole", "iam:UntagRole",
           "iam:AttachRolePolicy", "iam:DetachRolePolicy", "iam:PutRolePolicy",
           "iam:DeleteRolePolicy", "lambda:*", "logs:*", "s3:*",
           "sts:GetCallerIdentity"

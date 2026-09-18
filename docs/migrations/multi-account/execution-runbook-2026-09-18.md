@@ -1,4 +1,10 @@
-# Migration runbook
+# Multi-account migration execution record
+
+> **Historical deployment-specific runbook**
+>
+> Started: 2026-09-18. Commands and account IDs in this file were used for one
+> migration. New installations should follow the maintained guides under
+> `docs/operations/`.
 
 ## Safety snapshot
 
@@ -28,7 +34,9 @@ S3 version IDs for mutable data and deployment artifacts.
    the ACM validation CNAME, wait for issuance, enable the CloudFront alias,
    then add the application CNAME to the CloudFront output.
 
-## Weather development canary
+## Weather production canary
+
+Status: completed. The old stack was retained temporarily as a rollback target.
 
 1. Back up its old Terraform state and record all resource IDs.
 2. Initialize the new tenant-prefixed backend with `npm run terraform:init`.
@@ -38,7 +46,7 @@ S3 version IDs for mutable data and deployment artifacts.
 4. Review the plan for unexpected deletion or production changes.
 5. Deploy, invoke each API, and verify logs remain in `joe-workload`.
 6. Run negative access checks from Scott's session.
-7. Keep old dev resources until the new environment passes acceptance.
+7. Keep old production resources until the new environment passes acceptance.
 
 Rollback before cutover deletes only newly created canary resources and restores
 the old state as source of truth. For production DNS, restore the old alias and

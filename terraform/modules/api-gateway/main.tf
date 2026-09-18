@@ -14,6 +14,13 @@ resource "aws_apigatewayv2_api" "this" {
     Environment = var.environment
     ManagedBy   = "terraform"
   }
+
+  lifecycle {
+    precondition {
+      condition     = var.auth != null || !anytrue([for route in var.routes : route.auth_required])
+      error_message = "Routes with auth_required = true require the module-level auth configuration."
+    }
+  }
 }
 
 resource "aws_cloudwatch_log_group" "access_logs" {

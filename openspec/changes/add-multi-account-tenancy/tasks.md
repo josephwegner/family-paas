@@ -42,8 +42,8 @@
 
 ## 7. Migration And Acceptance
 
-- [ ] 7.1 Back up the existing state and stateful data, create Joe's workload and platform foundations, and verify break-glass access before moving an application.
-- [ ] 7.2 Migrate the selected stateless application into Joe's workload account, review for unintended replacement, validate the new endpoint, cut over DNS, and exercise rollback.
+- [x] 7.1 Back up the existing state and stateful data, create Joe's workload and platform foundations, and verify break-glass access before moving an application.
+- [x] 7.2 Migrate the selected stateless application into Joe's workload account, review for unintended replacement, validate the new endpoint, cut over DNS, and exercise rollback.
 - [x] 7.3 Produce per-application migration runbooks for remaining stateful applications, including data copy, import/state operations, DNS cutover, and reverse synchronization where required.
 - [ ] 7.4 Onboard a test brother tenant and complete an end-to-end local `init`, `plan`, `apply`, Lambda deployment, and frontend deployment; separately verify the owner-mediated custom-domain workflow if a custom name is requested.
 - [ ] 7.5 Run negative acceptance tests proving the tenant cannot enumerate or modify Joe's resources, platform/shared state, consolidated billing, or another workload account, and has no AWS DNS permissions.

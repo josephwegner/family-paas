@@ -11,6 +11,12 @@ APP_NAME="$1"
 DEST="$2"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 TEMPLATE_DIR="$SCRIPT_DIR/../templates/new-app"
+FAMILY_PAAS_REF="$(git -C "$SCRIPT_DIR/.." rev-parse HEAD)"
+
+if [ -n "$(git -C "$SCRIPT_DIR/.." status --porcelain -- templates/new-app packages terraform/modules)" ]; then
+  echo "Error: platform template or module changes are uncommitted. Commit them before scaffolding so the generated app can pin a valid revision."
+  exit 1
+fi
 
 if [ -d "$DEST" ]; then
   echo "Error: $DEST already exists"
@@ -21,13 +27,25 @@ echo "Creating new app: $APP_NAME"
 echo "Destination: $DEST"
 echo ""
 
-cp -r "$TEMPLATE_DIR" "$DEST"
+mkdir -p "$DEST"
+rsync -a \
+  --exclude '.terraform/' \
+  --exclude '*.tfstate' \
+  --exclude '*.tfstate.backup' \
+  --exclude '*.tfplan' \
+  --exclude 'node_modules/' \
+  --exclude 'dist/' \
+  "$TEMPLATE_DIR/" "$DEST/"
 
-# Replace APP_NAME placeholder in all files
+# Pin generated consumers to the exact platform revision used for scaffolding.
 if [[ "$(uname)" == "Darwin" ]]; then
-  find "$DEST" -type f -exec sed -i '' "s/APP_NAME/$APP_NAME/g" {} +
+  find "$DEST" -type f -exec sed -i '' \
+    -e "s/APP_NAME/$APP_NAME/g" \
+    -e "s/FAMILY_PAAS_REF/$FAMILY_PAAS_REF/g" {} +
 else
-  find "$DEST" -type f -exec sed -i "s/APP_NAME/$APP_NAME/g" {} +
+  find "$DEST" -type f -exec sed -i \
+    -e "s/APP_NAME/$APP_NAME/g" \
+    -e "s/FAMILY_PAAS_REF/$FAMILY_PAAS_REF/g" {} +
 fi
 
 echo "App scaffolded at $DEST"

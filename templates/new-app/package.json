@@ -5,16 +5,17 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:api\"",
-    "dev:frontend": "echo 'Add your frontend dev command here'",
+    "dev:frontend": "echo 'Replace this command when adding a frontend'",
     "dev:api": "tsx local-dev/server.ts",
-    "build:frontend": "echo 'Add your frontend build command here'",
+    "build:frontend": "mkdir -p dist/frontend && cp frontend/index.html dist/frontend/index.html",
     "deploy": "tsx node_modules/family-paas/packages/deploy/src/index.ts",
     "deploy:lambdas": "tsx node_modules/family-paas/packages/deploy/src/index.ts --lambdas-only",
+    "deploy:seed": "tsx node_modules/family-paas/packages/deploy/src/index.ts --seed-lambdas",
     "deploy:frontend": "tsx node_modules/family-paas/packages/deploy/src/index.ts --frontend-only",
     "terraform:init": "tsx node_modules/family-paas/packages/deploy/src/index.ts --terraform-init"
   },
   "dependencies": {
-    "family-paas": "github:josephwegner/family-paas#main",
+    "family-paas": "github:josephwegner/family-paas#FAMILY_PAAS_REF",
     "cors": "^2.8.5",
     "dotenv": "^17.0.0",
     "express": "^5.1.0"

@@ -23,6 +23,11 @@ output "qualified_arn" {
   value       = aws_lambda_alias.live.arn
 }
 
+output "alias_invoke_arn" {
+  description = "Invoke ARN of the stable live alias"
+  value       = aws_lambda_alias.live.invoke_arn
+}
+
 output "log_group_name" {
   description = "CloudWatch log group name for this function"
   value       = aws_cloudwatch_log_group.this.name

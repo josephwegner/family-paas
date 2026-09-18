@@ -8,5 +8,8 @@
     "./lambda-simulator": "./packages/lambda-simulator/src/index.ts",
     "./deploy": "./packages/deploy/src/index.ts",
     "./auth": "./packages/auth/src/index.ts"
+  },
+  "scripts": {
+    "bootstrap:workload": "bash scripts/bootstrap-workload.sh"
   }
 }

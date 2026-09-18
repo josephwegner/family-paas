@@ -38,7 +38,7 @@ resource "aws_iam_role_policy_attachment" "lambda_basic" {
 }
 
 module "lambdas" {
-  source = "git::https://github.com/josephwegner/family-paas.git//terraform/modules/lambda-function?ref=main"
+  source = "git::https://github.com/josephwegner/family-paas.git//terraform/modules/lambda-function?ref=FAMILY_PAAS_REF"
   for_each = {
     "example" = { s3_key = "${var.app_name}/${var.environment}/example.zip" }
   }
@@ -58,7 +58,7 @@ module "lambdas" {
 ## protection are enabled by default; add global_secondary_indexes only when
 ## a real query pattern needs one):
 # module "table" {
-#   source      = "git::https://github.com/josephwegner/family-paas.git//terraform/modules/dynamodb-table?ref=main"
+#   source      = "git::https://github.com/josephwegner/family-paas.git//terraform/modules/dynamodb-table?ref=FAMILY_PAAS_REF"
 #   table_name  = "${var.app_name}-data-${var.environment}"
 #   environment = var.environment
 #   hash_key    = "pk"
@@ -100,7 +100,7 @@ module "lambdas" {
 # }
 
 module "api" {
-  source      = "git::https://github.com/josephwegner/family-paas.git//terraform/modules/api-gateway?ref=main"
+  source      = "git::https://github.com/josephwegner/family-paas.git//terraform/modules/api-gateway?ref=FAMILY_PAAS_REF"
   app_name    = var.app_name
   environment = var.environment
 
@@ -109,14 +109,14 @@ module "api" {
   # cors_allowed_origins = var.allowed_origins
 
   routes = [
-    { route_key = "GET /api/example", function_arn = module.lambdas["example"].invoke_arn, function_name = module.lambdas["example"].function_name },
+    { route_key = "GET /api/example", function_arn = module.lambdas["example"].alias_invoke_arn, function_name = module.lambdas["example"].qualified_arn },
     ## Example authenticated route:
-    # { route_key = "POST /api/protected", function_arn = module.lambdas["protected"].invoke_arn, function_name = module.lambdas["protected"].function_name, auth_required = true },
+    # { route_key = "POST /api/protected", function_arn = module.lambdas["protected"].alias_invoke_arn, function_name = module.lambdas["protected"].qualified_arn, auth_required = true },
   ]
 }
 
 module "frontend" {
-  source               = "git::https://github.com/josephwegner/family-paas.git//terraform/modules/frontend-hosting?ref=main"
+  source               = "git::https://github.com/josephwegner/family-paas.git//terraform/modules/frontend-hosting?ref=FAMILY_PAAS_REF"
   app_name             = var.app_name
   environment          = var.environment
   api_gateway_endpoint = module.api.api_endpoint

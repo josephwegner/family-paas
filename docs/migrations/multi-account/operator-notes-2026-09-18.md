@@ -1,4 +1,10 @@
-# Account and identity operations
+# Account and identity operator notes
+
+> **Historical deployment-specific notes**
+>
+> Captured: 2026-09-18. Use the maintained
+> [workload onboarding guide](../../operations/workload-onboarding.md) for new
+> tenants.
 
 ## Root and break-glass controls
 
@@ -31,6 +37,29 @@ and repository secrets are not part of the supported deployment workflow.
 4. Add the generated platform state role ARN to the workload permission set.
 5. Apply workload bootstrap from the tenant workload session.
 6. Run positive and negative acceptance checks before sharing access.
+
+The tenant can perform step 5 from the Family-PaaS repository with:
+
+```bash
+aws sso login --profile <tenant-profile>
+npm run bootstrap:workload -- \
+  <tenant-id> \
+  <workload-account-id> \
+  <tenant-profile> \
+  <state-bucket> \
+  <state-role-arn>
+```
+
+For Scott, the concrete command is:
+
+```bash
+npm run bootstrap:workload -- \
+  scott \
+  779047207651 \
+  family-paas-scott \
+  family-paas-terraform-state-847547469929 \
+  arn:aws:iam::847547469929:role/family-paas-scott-state
+```
 
 ## Suspension
 

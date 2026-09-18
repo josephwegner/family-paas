@@ -147,8 +147,17 @@ function updateLambdas(config: AppConfig, cwd: string) {
     const s3Key = `${config.name}/${config.environment}/${lambda}.zip`;
 
     console.log(`Updating ${functionName}...`);
+    const update = JSON.parse(
+      execSync(
+        `aws lambda update-function-code --function-name "${functionName}" --s3-bucket "${bucket}" --s3-key "${s3Key}" --publish --output json`,
+        { cwd }
+      ).toString()
+    ) as { Version?: string };
+    if (!update.Version) {
+      throw new Error(`Lambda did not return a published version for ${functionName}`);
+    }
     run(
-      `aws lambda update-function-code --function-name "${functionName}" --s3-bucket "${bucket}" --s3-key "${s3Key}" --output json > /dev/null`,
+      `aws lambda update-alias --function-name "${functionName}" --name live --function-version "${update.Version}" --output json > /dev/null`,
       { cwd }
     );
   }
@@ -195,7 +204,13 @@ export function main() {
   const config = loadConfig(cwd);
 
   const mode = process.argv[2] || 'all';
-  const modes = new Set(['all', '--lambdas-only', '--frontend-only', '--terraform-init']);
+  const modes = new Set([
+    'all',
+    '--lambdas-only',
+    '--seed-lambdas',
+    '--frontend-only',
+    '--terraform-init',
+  ]);
   if (!modes.has(mode)) {
     throw new Error(`Unsupported deployment mode: ${mode}`);
   }
@@ -214,9 +229,12 @@ export function main() {
     return;
   }
 
-  if (mode === 'all' || mode === '--lambdas-only') {
+  if (mode === 'all' || mode === '--lambdas-only' || mode === '--seed-lambdas') {
     buildLambdas(config, cwd);
     uploadLambdas(config, cwd);
+  }
+
+  if (mode === 'all' || mode === '--lambdas-only') {
     updateLambdas(config, cwd);
   }
 

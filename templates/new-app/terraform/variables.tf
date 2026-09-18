@@ -22,7 +22,7 @@ variable "workload_account_id" {
 }
 
 variable "domain_name" {
-  description = "Registry-assigned application hostname; empty disables custom DNS"
+  description = "Platform-operator-approved application hostname; empty disables custom DNS"
   type        = string
   default     = ""
 }

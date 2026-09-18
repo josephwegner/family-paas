@@ -1,5 +1,10 @@
 # Pre-migration inventory
 
+> **Historical deployment-specific record**
+>
+> Captured: 2026-09-18. This file describes resources observed before the
+> migration and is not a statement of current architecture.
+
 Captured from account `743837809639` before creating the AWS Organization.
 Re-run the commands in `migration.md` immediately before each migration.
 
@@ -28,8 +33,10 @@ Re-run the commands in `migration.md` immediately before each migration.
 - Truth or Dare has a prod API, Lambda resources, CloudFront, S3, and DynamoDB.
 - Todone has a prod API, Lambda resources, S3, DynamoDB, and Cognito.
 
-## Canary selection
+## Canary selection and outcome
 
-The `weather-app` development environment is the canary because no dev
-DynamoDB table or custom CloudFront alias was found. It exercises local state,
-Lambda, API, and workload-account isolation without production DNS cutover.
+The initial inventory suggested a development canary, but repository inspection
+showed that only production was represented in Terraform. The production
+`weather-app` stack became the canary. It was recreated in the workload account,
+validated at its default endpoints, issued a workload-owned certificate, and
+then received the external DNS cutover.
