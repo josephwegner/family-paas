@@ -12,6 +12,21 @@ on:
       - ".github/workflows/terraform-modules.yml"
 
 jobs:
+  api-gateway:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform/modules/api-gateway
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.9
+      - run: terraform fmt -check -recursive
+      - run: terraform init -backend=false
+      - run: terraform validate
+      - run: terraform test
+
   cognito-app-client-terraform-1-5:
     runs-on: ubuntu-latest
     defaults:

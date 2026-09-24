@@ -100,9 +100,11 @@ module "lambdas" {
 # }
 
 module "api" {
-  source      = "git::https://github.com/josephwegner/family-paas.git//terraform/modules/api-gateway?ref=FAMILY_PAAS_REF"
-  app_name    = var.app_name
-  environment = var.environment
+  source                 = "git::https://github.com/josephwegner/family-paas.git//terraform/modules/api-gateway?ref=FAMILY_PAAS_REF"
+  app_name               = var.app_name
+  environment            = var.environment
+  throttling_rate_limit  = var.throttling_rate_limit
+  throttling_burst_limit = var.throttling_burst_limit
 
   ## Restrict to explicit origins once this app has known dev/prod origins
   ## (defaults to "*" for apps without authenticated routes):

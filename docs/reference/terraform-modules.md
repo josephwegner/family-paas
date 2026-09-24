@@ -27,6 +27,12 @@ same `live` alias.
 Creates an HTTP API, routes, Lambda integrations and permissions, optional JWT
 authorizer, CORS configuration, and privacy-safe access logs.
 
+Stage throttling can be configured with `throttling_rate_limit` (steady-state
+requests per second) and `throttling_burst_limit`. They default to `10000` and
+`5000`, respectively, for backward compatibility. These best-effort limits can
+help control traffic and cost, but they are not authentication or hard spend
+caps.
+
 A route with `auth_required = true` requires the module-level `auth` object.
 Terraform rejects the configuration instead of silently creating a public
 route. JWT authentication validates the token; application handlers must still

@@ -38,3 +38,15 @@ variable "allowed_origins" {
   type        = list(string)
   default     = []
 }
+
+variable "throttling_rate_limit" {
+  description = "Steady-state requests per second for the API's $default stage"
+  type        = number
+  default     = 10000
+}
+
+variable "throttling_burst_limit" {
+  description = "Burst request limit for the API's $default stage"
+  type        = number
+  default     = 5000
+}

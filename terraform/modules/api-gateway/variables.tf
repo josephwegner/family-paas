@@ -44,3 +44,15 @@ variable "access_log_retention_days" {
   type        = number
   default     = 30
 }
+
+variable "throttling_rate_limit" {
+  description = "Steady-state requests per second for the $default stage"
+  type        = number
+  default     = 10000
+}
+
+variable "throttling_burst_limit" {
+  description = "Burst request limit for the $default stage"
+  type        = number
+  default     = 5000
+}
