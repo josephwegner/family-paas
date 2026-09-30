@@ -26,6 +26,10 @@ variables {
       workload_account_id    = "777788889999"
       workload_principal_arn = "arn:aws:iam::777788889999:role/ScottWorkload"
     }
+    shared-services = {
+      workload_account_id    = "222233334444"
+      workload_principal_arn = "arn:aws:iam::222233334444:role/SharedServicesOperator"
+    }
   }
 }
 
@@ -35,6 +39,21 @@ run "tenant_policies_are_scoped" {
   assert {
     condition     = output.tenant_policy_scope["joe"].state_object_key_patterns[0] == "tenants/joe/*"
     error_message = "Joe's state policy must include only Joe's tenant prefix."
+  }
+
+  assert {
+    condition     = output.tenant_policy_scope["shared-services"].state_object_key_patterns[0] == "tenants/shared-services/*"
+    error_message = "Shared-services state must include only its own tenant prefix."
+  }
+
+  assert {
+    condition     = !contains(output.tenant_policy_scope["shared-services"].state_list_prefixes, "tenants/joe") && !contains(output.tenant_policy_scope["shared-services"].state_list_prefixes, "tenants/scott")
+    error_message = "Shared-services must not include a person tenant prefix."
+  }
+
+  assert {
+    condition     = !contains(output.tenant_policy_scope["joe"].state_list_prefixes, "tenants/shared-services") && !contains(output.tenant_policy_scope["scott"].state_list_prefixes, "tenants/shared-services")
+    error_message = "Person tenants must not include the shared-services prefix."
   }
 
   assert {

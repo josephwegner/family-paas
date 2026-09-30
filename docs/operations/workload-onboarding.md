@@ -1,5 +1,8 @@
 # Workload onboarding
 
+This workflow is for person-workload accounts. Household appliances use
+[shared-services onboarding](shared-services-onboarding.md).
+
 ## Platform-operator steps
 
 1. Create or register the workload account in the management root.

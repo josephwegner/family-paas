@@ -20,9 +20,17 @@ variable "state_bucket_name" {
 }
 
 variable "tenants" {
-  description = "Non-secret registry of workload accounts and trusted state principals."
+  description = "Non-secret registry of person-workload or shared-services accounts and trusted state principals."
   type = map(object({
     workload_account_id    = string
     workload_principal_arn = string
   }))
+
+  validation {
+    condition = alltrue([
+      for tenant in values(var.tenants) :
+      can(regex("^arn:aws:iam::${tenant.workload_account_id}:role/.+$", tenant.workload_principal_arn))
+    ])
+    error_message = "Each workload_principal_arn must be an IAM role in its declared workload_account_id."
+  }
 }

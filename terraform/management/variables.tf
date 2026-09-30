@@ -72,3 +72,9 @@ variable "platform_role_arns" {
   type        = map(set(string))
   default     = {}
 }
+
+variable "shared_services_operator_principal_ids" {
+  description = "IAM Identity Center USER principal IDs assigned to the shared-services operator permission set."
+  type        = set(string)
+  default     = []
+}

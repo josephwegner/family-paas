@@ -4,11 +4,12 @@ Family-PaaS is a small, self-hosted application platform for trusted groups.
 It provides reusable Terraform modules, TypeScript helpers, an application
 template, and local deployment commands for AWS.
 
-Each tenant uses a separate AWS workload account. A management account owns
+Each person tenant uses a separate AWS workload account. A management account owns
 organization, billing, and identity governance; a platform account owns
 tenant-isolated Terraform state. Application infrastructure, data, logs,
 deployment artifacts, CloudFront distributions, and ACM certificates remain in
-the tenant's workload account.
+the tenant's workload account. A separate `shared-services` member account is
+reserved for household appliances that are not one person's applications.
 
 ## Repository layout
 
@@ -66,6 +67,7 @@ Routine application deployment and infrastructure changes are covered in the
 - [Costs and budgets](docs/architecture/costs-and-budgets.md)
 - [Platform administration](docs/operations/platform-administration.md)
 - [Workload onboarding](docs/operations/workload-onboarding.md)
+- [Shared-services onboarding](docs/operations/shared-services-onboarding.md)
 - [Application deployment](docs/operations/app-deployment.md)
 - [Deployment-specific migration records](docs/migrations/multi-account/README.md)
 

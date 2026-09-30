@@ -1,7 +1,7 @@
 # Costs and budgets
 
 AWS Organizations uses consolidated billing. The payer can attribute usage by
-linked workload account without giving tenants access to organization-wide
+linked member account without giving tenants access to organization-wide
 billing data.
 
 The management Terraform root creates one configurable monthly budget with

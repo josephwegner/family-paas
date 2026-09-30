@@ -10,4 +10,8 @@ tenants = {
     workload_account_id   = "777788889999"
     workload_principal_arn = "arn:aws:iam::777788889999:role/aws-reserved/sso.amazonaws.com/us-east-1/AWSReservedSSO_FamilyPaasWorkloadDeveloper_EXAMPLE"
   }
+  shared-services = {
+    workload_account_id    = "222233334444"
+    workload_principal_arn = "arn:aws:iam::222233334444:role/aws-reserved/sso.amazonaws.com/us-east-2/AWSReservedSSO_FamilyPaas-SharedSvc-Operator_EXAMPLE"
+  }
 }

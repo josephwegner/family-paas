@@ -1,11 +1,13 @@
 # Accounts and Terraform state
 
-Family-PaaS uses three account roles:
+Family-PaaS uses four account roles:
 
 - **Management account:** AWS Organizations, consolidated billing, budgets,
   and IAM Identity Center governance. It should not host application workloads.
 - **Platform account:** central Terraform state and one state role per tenant.
-- **Workload account:** all applications owned by one tenant.
+- **Person-workload account:** all applications owned by one person tenant.
+- **Shared-services account:** household appliances that are not one person's
+  applications. It does not hold platform state or person-owned applications.
 
 Each tenant role can access only keys beneath `tenants/<tenant>/`. Bootstrap
 state uses `tenants/<tenant>/bootstrap/terraform.tfstate`; application state

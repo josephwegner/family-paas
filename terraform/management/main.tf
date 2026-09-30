@@ -125,3 +125,59 @@ resource "aws_ssoadmin_account_assignment" "tenant" {
   target_id          = aws_organizations_account.member[each.value.account_key].id
   target_type        = "AWS_ACCOUNT"
 }
+
+resource "aws_ssoadmin_permission_set" "shared_services_operator" {
+  count    = local.identity_center_enabled ? 1 : 0
+  provider = aws.identity_center
+
+  name             = "FamilyPaas-SharedSvc-Operator"
+  description      = "Operate household appliances in shared-services without organization, billing, or person-workload access"
+  instance_arn     = var.identity_center_instance_arn
+  session_duration = "PT4H"
+}
+
+resource "aws_ssoadmin_permission_set_inline_policy" "shared_services_operator" {
+  count    = local.identity_center_enabled ? 1 : 0
+  provider = aws.identity_center
+
+  instance_arn       = var.identity_center_instance_arn
+  permission_set_arn = aws_ssoadmin_permission_set.shared_services_operator[0].arn
+  inline_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "SharedServicesBootstrapBucket"
+        Effect = "Allow"
+        Action = "s3:*"
+        Resource = [
+          "arn:aws:s3:::lambda-deployments-${aws_organizations_account.member["shared_services"].id}",
+          "arn:aws:s3:::lambda-deployments-${aws_organizations_account.member["shared_services"].id}/*"
+        ]
+      },
+      {
+        Sid      = "CallerIdentity"
+        Effect   = "Allow"
+        Action   = "sts:GetCallerIdentity"
+        Resource = "*"
+      },
+      {
+        Sid      = "SharedServicesPlatformState"
+        Effect   = "Allow"
+        Action   = "sts:AssumeRole"
+        Resource = "arn:aws:iam::${aws_organizations_account.member["joe_platform"].id}:role/family-paas-shared-services-state"
+      }
+    ]
+  })
+}
+
+resource "aws_ssoadmin_account_assignment" "shared_services_operator" {
+  for_each = local.identity_center_enabled ? var.shared_services_operator_principal_ids : []
+  provider = aws.identity_center
+
+  instance_arn       = var.identity_center_instance_arn
+  permission_set_arn = aws_ssoadmin_permission_set.shared_services_operator[0].arn
+  principal_id       = each.value
+  principal_type     = "USER"
+  target_id          = aws_organizations_account.member["shared_services"].id
+  target_type        = "AWS_ACCOUNT"
+}

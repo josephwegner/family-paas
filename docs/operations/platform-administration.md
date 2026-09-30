@@ -41,6 +41,10 @@ its region differs from the general management provider region.
 5. Add each exact state role ARN to only the corresponding tenant permission
    set in the management root.
 
+Shared-services follows a separate operator-assignment path. See
+[shared-services onboarding](shared-services-onboarding.md); do not add it to
+the person-tenant permission-set map.
+
 The platform root bootstraps its own state bucket, so its initial state is
 local. Back it up securely. If moving that state into remote storage later,
 use `terraform init -migrate-state`, preserve a pre-migration copy, and verify a

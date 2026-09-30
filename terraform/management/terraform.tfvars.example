@@ -13,6 +13,10 @@ member_accounts = {
     name  = "scott"
     email = "swegner2@gmail.com"
   }
+  shared_services = {
+    name  = "shared-services"
+    email = "family-paas-shared-services@example.com"
+  }
 }
 
 monthly_budget_usd         = 500
@@ -26,3 +30,4 @@ identity_center_instance_arn = null
 identity_center_region       = "us-east-2"
 tenant_principal_ids          = {}
 platform_role_arns            = {}
+shared_services_operator_principal_ids = []
