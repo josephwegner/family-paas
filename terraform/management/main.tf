@@ -102,6 +102,12 @@ resource "aws_ssoadmin_permission_set_inline_policy" "workload_developer" {
           "sts:GetCallerIdentity"
         ]
         Resource = "*"
+      },
+      {
+        Sid      = "WorkloadTopicCreation"
+        Effect   = "Allow"
+        Action   = ["sns:CreateTopic", "sns:TagResource"]
+        Resource = "arn:aws:sns:*:${aws_organizations_account.member[each.value.account_key].id}:*"
       }
       ], length(lookup(var.platform_role_arns, each.key, [])) > 0 ? [
       {

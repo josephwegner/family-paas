@@ -6,7 +6,9 @@ may assume only its own platform state role.
 
 Workload permissions support the services used by the application modules but
 exclude organization administration, account administration, consolidated
-billing, and arbitrary cross-account role assumption.
+billing, and arbitrary cross-account role assumption. Users can create SNS
+topics, including topics with tags, in their own workload account in any region.
+The topic-creation permission does not grant publishing or subscription access.
 
 Application authentication is separate from AWS operator identity. The API
 Gateway module can validate JWT issuer and audience. A valid JWT establishes
