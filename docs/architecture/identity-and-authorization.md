@@ -6,7 +6,9 @@ may assume only its own platform state role.
 
 Workload permissions support the services used by the application modules but
 exclude organization administration, account administration, consolidated
-billing, and arbitrary cross-account role assumption.
+billing, and arbitrary cross-account role assumption. Users can create SNS
+topics, including topics with tags, in their own workload account in any region.
+The topic-creation permission does not grant publishing or subscription access.
 
 Household-appliance operators use a separate
 `FamilyPaas-SharedSvc-Operator` permission set in `shared-services`. Assignment
